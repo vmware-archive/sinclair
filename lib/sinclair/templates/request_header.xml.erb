@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<request API_version='1.0' client='<%= client %>' client_ver='1.1' namespace='default' key='<%= key %>'>
+  <Auth>
+    <Login>
+      <company><%= company %></company>
+      <user><%= username %></user>
+      <password><%= password %></password>
+    </Login>
+  </Auth>
+  <%= yield %>
+</request>

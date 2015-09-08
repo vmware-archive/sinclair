@@ -1,0 +1,14 @@
+<?xml version="1.0" standalone="yes"?>
+<response>
+  <Auth status = "0"></Auth>
+  <Read status = "0">
+    <Customer>
+      <id>10</id>
+      <name>Fancy Client</name>
+    </Customer>
+    <Customer>
+      <id>40</id>
+      <name>Blah Client</name>
+    </Customer>
+  </Read>
+</response>
