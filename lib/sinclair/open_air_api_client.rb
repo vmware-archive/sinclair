@@ -5,7 +5,7 @@ require 'nokogiri'
 module Sinclair
   class OpenAirApiClient
 
-    def initialize(username:, password:, company:, client:, key:, url: 'https://www.openair.com', limit: '1000', timeout: 180)
+    def initialize(username:, password:, company:, client:, key:, url: 'https://www.openair.com', limit: '1000', timeout: 180, open_timeout: 120)
       @username = username
       @password = password
       @company = company
@@ -14,6 +14,7 @@ module Sinclair
       @url = url
       @limit = limit
       @timeout = timeout
+      @open_timeout = open_timeout
     end
 
     def send_request(template: template, key: key)
@@ -42,7 +43,7 @@ module Sinclair
     end
 
     def get_response(template, locals = {})
-      options = {request: {timeout: @timeout, open_timeout: 10}}
+      options = {request: {timeout: @timeout, open_timeout: @open_timeout}}
       begin
         locals = locals.merge(username: @username, password: @password, company: @company, client: @client, key: @key, limit: @limit)
         Faraday.new(@url, options).post('/api.pl') do |request|
