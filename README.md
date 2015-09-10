@@ -1,5 +1,7 @@
 # Sinclair
 
+[![Build Status](https://travis-ci.org/pivotal/sinclair.svg)](https://travis-ci.org/pivotal/sinclair)
+
 ![Sinclair the Dinosaur](https://upload.wikimedia.org/wikipedia/en/a/a7/Sinclair_Oil_logo.svg)
 
 Sinclair is a gem that makes using the OpenAir API tolerable.
