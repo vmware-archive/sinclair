@@ -1,6 +1,8 @@
 # Sinclair
 
 [![Build Status](https://travis-ci.org/pivotal/sinclair.svg)](https://travis-ci.org/pivotal/sinclair)
+[![Code Climate](https://codeclimate.com/github/pivotal/sinclair/badges/gpa.svg)](https://codeclimate.com/github/pivotal/sinclair)
+[![Test Coverage](https://codeclimate.com/github/pivotal/sinclair/badges/coverage.svg)](https://codeclimate.com/github/pivotal/sinclair/coverage)
 
 ![Sinclair the Dinosaur](https://upload.wikimedia.org/wikipedia/en/a/a7/Sinclair_Oil_logo.svg)
 
