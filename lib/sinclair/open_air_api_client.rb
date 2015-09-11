@@ -17,10 +17,10 @@ module Sinclair
       @open_timeout = open_timeout
     end
 
-    def send_request(template: template, key: key)
+    def send_request(template: template, key: key, locals: {})
       response = []
       while true
-        page = process_page(template, key, {offset: response.length})
+        page = process_page(template, key, {offset: response.length}.merge(locals))
         break unless page
         response += page
       end

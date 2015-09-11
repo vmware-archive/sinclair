@@ -29,6 +29,22 @@ describe Sinclair::OpenAirApiClient do
       expect(test_actions).not_to raise_exception
     end
 
+    it 'allows a user to pass in "locals"' do
+
+      arguments = {
+        template: 'im a template',
+        key: 'Customer',
+        locals: {
+          name: 'bar',
+          id: 'foo'
+        }
+      }
+
+      expect(subject).to receive(:process_page).with('im a template', 'Customer', {offset: 0, name: 'bar', id: 'foo'} )
+
+      subject.send_request(arguments)
+    end
+
     it 'makes multiple OpenAir requests when the number of responses is greater than the limit' do
       response = subject.send_request(template: template, key: 'Customer')
       names = response.map { |client| client['name'] }
