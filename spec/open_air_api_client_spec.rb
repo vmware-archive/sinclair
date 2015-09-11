@@ -2,10 +2,11 @@ require 'spec_helper'
 
 describe Sinclair::OpenAirApiClient do
   subject  { Sinclair::OpenAirApiClient.new(username: 'Username', password: 'Password', company: 'Company', client: 'Client', key: 'APIKEY', limit: '5') }
-  let!(:template) { "#{File.expand_path('../templates', __FILE__)}/client_request.xml.erb" }
+  let!(:template_path) { "#{File.expand_path('../templates', __FILE__)}/client_request.xml.erb" }
 
   describe '#send_request' do
-    it 'makes multiple OpenAir requests when the number of responses is greater than the limit' do
+    let(:template) {IO.read(template_path)}
+    before do
       stub_xml_request(
         request: 'all_clients_multiple_request_1',
         response: 'all_clients_multiple_response_1'
@@ -20,12 +21,25 @@ describe Sinclair::OpenAirApiClient do
         request: 'all_clients_multiple_request_3',
         response: 'all_clients_empty_response'
       )
+    end
 
+    it 'accepts file content as a string (not file paths)' do
+      test_actions = lambda { subject.send_request(template: template, key: 'Customer') }
+
+      expect(test_actions).not_to raise_exception
+    end
+
+    it 'makes multiple OpenAir requests when the number of responses is greater than the limit' do
       response = subject.send_request(template: template, key: 'Customer')
       names = response.map { |client| client['name'] }
 
       expect(names).to match_array(['Blah Client', 'Client 1', 'Client 2', 'Client 3', 'Client 4', 'Client 5', 'Fancy Client'])
     end
+
+  end
+
+  describe 'OpenAir Errors' do
+    let(:template) {IO.read(template_path)}
 
     it 'raises a OpenAirResponseUnrecognized error when the response is malformed' do
       stub_xml_request(

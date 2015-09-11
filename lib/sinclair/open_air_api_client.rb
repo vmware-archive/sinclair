@@ -30,7 +30,7 @@ module Sinclair
     private
 
     def process_page(template, key, locals = {})
-      response = get_response(File.read(template), locals)
+      response = get_response(template, locals)
 
       parsed_response = Nori.new(advanced_typecasting: false).parse(response.body)
       raise Sinclair::OpenAirResponseUnrecognized if parsed_response['response']['Auth'].nil?
