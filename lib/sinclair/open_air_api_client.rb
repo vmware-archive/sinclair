@@ -39,6 +39,9 @@ module Sinclair
       raise Sinclair::OpenAirUserLocked if authentication_status == 416
       raise Sinclair::OpenAirAuthenticationFailure if authentication_status != 0
 
+      read_status = parsed_response['response']['Read']['@status'].to_i
+      raise Sinclair::OpenAirResponseError.new(key, read_status) if read_status != 0
+
       parsed_response['response']['Read'][key]
     end
 

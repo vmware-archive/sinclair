@@ -97,5 +97,16 @@ describe Sinclair::OpenAirApiClient do
         subject.send_request(template: template, key: 'Client')
       }.to raise_error(Sinclair::OpenAirResponseTimeout)
     end
+
+    it 'raises a OpenAirResponseError when the read status is not zero' do
+      stub_xml_request(
+        request: 'all_clients_single_request',
+        response: 'all_clients_read_error'
+      )
+
+      expect {
+        subject.send_request(template: template, key: 'Client')
+      }.to raise_error(Sinclair::OpenAirResponseError, 'Error making OpenAir request for Client. Got status 602.')
+    end
   end
 end
