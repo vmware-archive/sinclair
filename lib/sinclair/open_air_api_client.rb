@@ -23,6 +23,7 @@ module Sinclair
         page = process_page(template, key, {offset: response.length}.merge(locals))
         break unless page
         response += page
+        break if page.length < @limit.to_i
       end
       response
     end
@@ -40,7 +41,7 @@ module Sinclair
       raise Sinclair::OpenAirAuthenticationFailure if authentication_status != 0
 
       read_status = parsed_response['response']['Read']['@status'].to_i
-      raise Sinclair::OpenAirResponseError.new(key, read_status) if read_status != 0
+      raise Sinclair::OpenAirResponseError.new(key, read_status) unless read_status == 0 || read_status == 601
 
       parsed_response['response']['Read'][key]
     end

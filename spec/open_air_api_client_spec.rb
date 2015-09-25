@@ -16,11 +16,6 @@ describe Sinclair::OpenAirApiClient do
         request: 'all_clients_multiple_request_2',
         response: 'all_clients_multiple_response_2'
       )
-
-      stub_xml_request(
-        request: 'all_clients_multiple_request_3',
-        response: 'all_clients_empty_response'
-      )
     end
 
     it 'accepts file content as a string (not file paths)' do
@@ -30,7 +25,6 @@ describe Sinclair::OpenAirApiClient do
     end
 
     it 'allows a user to pass in "locals"' do
-
       arguments = {
         template: 'im a template',
         key: 'Customer',
@@ -40,7 +34,7 @@ describe Sinclair::OpenAirApiClient do
         }
       }
 
-      expect(subject).to receive(:process_page).with('im a template', 'Customer', {offset: 0, name: 'bar', id: 'foo'} )
+      expect(subject).to receive(:process_page).with('im a template', 'Customer', {offset: 0, name: 'bar', id: 'foo'} ).and_return([])
 
       subject.send_request(arguments)
     end
@@ -51,7 +45,6 @@ describe Sinclair::OpenAirApiClient do
 
       expect(names).to match_array(['Blah Client', 'Client 1', 'Client 2', 'Client 3', 'Client 4', 'Client 5', 'Fancy Client'])
     end
-
   end
 
   describe 'OpenAir Errors' do
@@ -107,6 +100,17 @@ describe Sinclair::OpenAirApiClient do
       expect {
         subject.send_request(template: template, key: 'Client')
       }.to raise_error(Sinclair::OpenAirResponseError, 'Error making OpenAir request for Client. Got status 602.')
+    end
+
+    it 'does not raise an error when the read status is 601' do
+      stub_xml_request(
+        request: 'all_clients_single_request',
+        response: 'all_clients_read_601_error'
+      )
+
+      expect {
+        subject.send_request(template: template, key: 'Client')
+      }.not_to raise_error
     end
   end
 end
