@@ -22,7 +22,7 @@ module Sinclair
       while true
         page = process_page(template, key, {offset: response.length}.merge(locals))
         break unless page
-        response += page
+        response += wrap_response(page)
         break if page.length < @limit.to_i
       end
       response
@@ -57,6 +57,10 @@ module Sinclair
       rescue Faraday::TimeoutError
         raise Sinclair::OpenAirResponseTimeout
       end
+    end
+
+    def wrap_response(response)
+      response.is_a?(Array) ? response : [response]
     end
   end
 end

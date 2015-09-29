@@ -6,44 +6,53 @@ describe Sinclair::OpenAirApiClient do
 
   describe '#send_request' do
     let(:template) {IO.read(template_path)}
-    before do
-      stub_xml_request(
-        request: 'all_clients_multiple_request_1',
-        response: 'all_clients_multiple_response_1'
-      )
 
-      stub_xml_request(
-        request: 'all_clients_multiple_request_2',
-        response: 'all_clients_multiple_response_2'
-      )
+    context 'when the response contains one item' do
+      before do
+        stub_xml_request(
+          request: 'clients_request',
+          response: 'clients_response'
+        )
+      end
+
+      it 'returns an array of one item' do
+        response = subject.send_request(template: template, key: 'Customer')
+        expect(response.map { |client| client['name'] }).to match_array(['Client 1'])
+      end
     end
 
-    it 'accepts file content as a string (not file paths)' do
-      test_actions = lambda { subject.send_request(template: template, key: 'Customer') }
+    context 'when the response contains multiple items' do
+      before do
+        stub_xml_request(
+          request: 'all_clients_multiple_request_1',
+          response: 'all_clients_multiple_response_1'
+        )
 
-      expect(test_actions).not_to raise_exception
-    end
+        stub_xml_request(
+          request: 'all_clients_multiple_request_2',
+          response: 'all_clients_multiple_response_2'
+        )
+      end
 
-    it 'allows a user to pass in "locals"' do
-      arguments = {
-        template: 'im a template',
-        key: 'Customer',
-        locals: {
-          name: 'bar',
-          id: 'foo'
-        }
-      }
+      it 'accepts file content as a string (not file paths)' do
+        test_actions = lambda { subject.send_request(template: template, key: 'Customer') }
 
-      expect(subject).to receive(:process_page).with('im a template', 'Customer', {offset: 0, name: 'bar', id: 'foo'} ).and_return([])
+        expect(test_actions).not_to raise_exception
+      end
 
-      subject.send_request(arguments)
-    end
+      it 'allows a user to pass in "locals"' do
+        arguments = {template: 'im a template', key: 'Customer', locals: {name: 'bar', id: 'foo'}}
+        expect(subject).to receive(:process_page).with('im a template', 'Customer', {offset: 0, name: 'bar', id: 'foo'}).and_return([])
 
-    it 'makes multiple OpenAir requests when the number of responses is greater than the limit' do
-      response = subject.send_request(template: template, key: 'Customer')
-      names = response.map { |client| client['name'] }
+        subject.send_request(arguments)
+      end
 
-      expect(names).to match_array(['Blah Client', 'Client 1', 'Client 2', 'Client 3', 'Client 4', 'Client 5', 'Fancy Client'])
+      it 'makes multiple OpenAir requests when the number of responses is greater than the limit' do
+        response = subject.send_request(template: template, key: 'Customer')
+        names = response.map { |client| client['name'] }
+
+        expect(names).to match_array(['Blah Client', 'Client 1', 'Client 2', 'Client 3', 'Client 4', 'Client 5', 'Fancy Client'])
+      end
     end
   end
 
