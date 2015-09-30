@@ -21,8 +21,9 @@ module Sinclair
       response = []
       while true
         page = process_page(template, key, {offset: response.length}.merge(locals))
+        page.flatten!
         break unless page
-        response += wrap_response(page)
+        response += page
         break if page.length < @limit.to_i
       end
       response
@@ -31,19 +32,39 @@ module Sinclair
     private
 
     def process_page(template, key, locals = {})
+      response = make_request(locals, template)
+      check_auth_status(response)
+
+      read = response['response']['Read']
+      read = [read] unless read.is_a?(Array)
+
+      check_read_status(read)
+
+      read.map { |r| r[key] }
+    end
+
+    def make_request(locals, template)
       response = get_response(template, locals)
+      Nori.new(advanced_typecasting: false).parse(response.body)
+    end
 
-      parsed_response = Nori.new(advanced_typecasting: false).parse(response.body)
-      raise Sinclair::OpenAirResponseUnrecognized if parsed_response['response']['Auth'].nil?
+    def invalid_read_status(status)
+      status != 0 && status != 601
+    end
 
-      authentication_status = parsed_response['response']['Auth']['@status'].to_i
-      raise Sinclair::OpenAirUserLocked if authentication_status == 416
-      raise Sinclair::OpenAirAuthenticationFailure if authentication_status != 0
+    def check_auth_status(response)
+      raise Sinclair::OpenAirResponseUnrecognized if response['response']['Auth'].nil?
 
-      read_status = parsed_response['response']['Read']['@status'].to_i
-      raise Sinclair::OpenAirResponseError.new(key, read_status) unless read_status == 0 || read_status == 601
+      auth_status = response['response']['Auth']['@status'].to_i
+      raise Sinclair::OpenAirUserLocked if auth_status == 416
+      raise Sinclair::OpenAirAuthenticationFailure if auth_status != 0
+    end
 
-      parsed_response['response']['Read'][key]
+    def check_read_status(read)
+      statuses = read.map { |r| r['@status'].to_i }
+      if statuses.any? { |s| invalid_read_status(s) }
+        raise Sinclair::OpenAirResponseError.new(statuses.find { |s| invalid_read_status(s) })
+      end
     end
 
     def get_response(template, locals = {})

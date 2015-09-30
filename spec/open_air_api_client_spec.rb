@@ -2,124 +2,129 @@ require 'spec_helper'
 
 describe Sinclair::OpenAirApiClient do
   subject  { Sinclair::OpenAirApiClient.new(username: 'Username', password: 'Password', company: 'Company', client: 'Client', key: 'APIKEY', limit: '5') }
-  let!(:template_path) { "#{File.expand_path('../templates', __FILE__)}/client_request.xml.erb" }
+  let(:template) { IO.read("#{ File.expand_path('../templates', __FILE__) }/#{ template_name }") }
 
   describe '#send_request' do
-    let(:template) {IO.read(template_path)}
+    context 'when the request contains one command' do
+      let!(:template_name) { 'client_request.xml.erb' }
 
-    context 'when the response contains one item' do
+      context 'when the response contains one item' do
+        before do
+          stub_xml_request(
+            request: 'clients_request',
+            response: 'clients_response'
+          )
+        end
+
+        it 'returns an array of one item' do
+          response = subject.send_request(template: template, key: 'Customer')
+          expect(response.map { |client| client['name'] }).to match_array(['Client 1'])
+        end
+      end
+
+      context 'when the response contains multiple items' do
+        before do
+          stub_xml_request(
+            request: 'all_clients_multiple_request_1',
+            response: 'all_clients_multiple_response_1'
+          )
+
+          stub_xml_request(
+            request: 'all_clients_multiple_request_2',
+            response: 'all_clients_multiple_response_2'
+          )
+        end
+
+        it 'makes multiple requests when the number of responses is greater than the limit' do
+          response = subject.send_request(template: template, key: 'Customer')
+          names = response.map { |client| client['name'] }
+
+          expect(names).to match_array(['Blah Client', 'Client 1', 'Client 2', 'Client 3', 'Client 4', 'Client 5', 'Fancy Client'])
+        end
+      end
+    end
+
+    context 'when the request contains multiple commands' do
+      let!(:template_name) { 'client_multiple_commands_request.xml.erb' }
+
       before do
         stub_xml_request(
-          request: 'clients_request',
-          response: 'clients_response'
+          request: 'clients_multiple_commands_request',
+          response: 'clients_multiple_commands_response'
         )
       end
 
-      it 'returns an array of one item' do
-        response = subject.send_request(template: template, key: 'Customer')
-        expect(response.map { |client| client['name'] }).to match_array(['Client 1'])
+      it 'returns an array of all items' do
+        response = subject.send_request(template: template, key: 'Customer', locals: { customer_ids: [1, 2] })
+        expect(response.map { |client| client['name'] }).to match_array(['Customer 1', 'Customer 2'])
       end
     end
 
-    context 'when the response contains multiple items' do
-      before do
+    context 'when an error occurs' do
+      let!(:template_name) { 'client_request.xml.erb' }
+
+      it 'raises a OpenAirResponseUnrecognized error when the response is malformed' do
         stub_xml_request(
-          request: 'all_clients_multiple_request_1',
-          response: 'all_clients_multiple_response_1'
+          request: 'all_clients_single_request',
+          response: 'all_clients_single_error'
         )
 
+        expect {
+          subject.send_request(template: template, key: 'Client')
+        }.to raise_error(Sinclair::OpenAirResponseUnrecognized)
+      end
+
+      it 'raises a OpenAirUserLocked error when the response status is 416' do
         stub_xml_request(
-          request: 'all_clients_multiple_request_2',
-          response: 'all_clients_multiple_response_2'
+          request: 'all_clients_single_request',
+          response: 'all_clients_locked_error'
         )
+
+        expect {
+          subject.send_request(template: template, key: 'Client')
+        }.to raise_error(Sinclair::OpenAirUserLocked)
       end
 
-      it 'accepts file content as a string (not file paths)' do
-        test_actions = lambda { subject.send_request(template: template, key: 'Customer') }
+      it 'raises a OpenAirAuthenticationFailure error when the response status not zero' do
+        stub_xml_request(
+          request: 'all_clients_single_request',
+          response: 'all_clients_auth_error'
+        )
 
-        expect(test_actions).not_to raise_exception
+        expect {
+          subject.send_request(template: template, key: 'Client')
+        }.to raise_error(Sinclair::OpenAirAuthenticationFailure)
       end
 
-      it 'allows a user to pass in "locals"' do
-        arguments = {template: 'im a template', key: 'Customer', locals: {name: 'bar', id: 'foo'}}
-        expect(subject).to receive(:process_page).with('im a template', 'Customer', {offset: 0, name: 'bar', id: 'foo'}).and_return([])
+      it 'raises a OpenAirResponseTimeout error when OpenAir times out' do
+        allow_any_instance_of(Faraday::Connection).to receive(:post).and_raise(Faraday::TimeoutError)
 
-        subject.send_request(arguments)
+        expect {
+          subject.send_request(template: template, key: 'Client')
+        }.to raise_error(Sinclair::OpenAirResponseTimeout)
       end
 
-      it 'makes multiple OpenAir requests when the number of responses is greater than the limit' do
-        response = subject.send_request(template: template, key: 'Customer')
-        names = response.map { |client| client['name'] }
+      it 'raises a OpenAirResponseError when the read status is not zero' do
+        stub_xml_request(
+          request: 'all_clients_single_request',
+          response: 'all_clients_read_error'
+        )
 
-        expect(names).to match_array(['Blah Client', 'Client 1', 'Client 2', 'Client 3', 'Client 4', 'Client 5', 'Fancy Client'])
+        expect {
+          subject.send_request(template: template, key: 'Client')
+        }.to raise_error(Sinclair::OpenAirResponseError, 'Error making OpenAir request. Got status 602.')
       end
-    end
-  end
 
-  describe 'OpenAir Errors' do
-    let(:template) {IO.read(template_path)}
+      it 'does not raise an error when the read status is 601' do
+          stub_xml_request(
+            request: 'all_clients_single_request',
+            response: 'all_clients_read_601_error'
+          )
 
-    it 'raises a OpenAirResponseUnrecognized error when the response is malformed' do
-      stub_xml_request(
-        request: 'all_clients_single_request',
-        response: 'all_clients_single_error'
-      )
-
-      expect {
-        subject.send_request(template: template, key: 'Client')
-      }.to raise_error(Sinclair::OpenAirResponseUnrecognized)
-    end
-
-    it 'raises a OpenAirUserLocked error when the response status is 416' do
-      stub_xml_request(
-        request: 'all_clients_single_request',
-        response: 'all_clients_locked_error'
-      )
-
-      expect {
-        subject.send_request(template: template, key: 'Client')
-      }.to raise_error(Sinclair::OpenAirUserLocked)
-    end
-
-    it 'raises a OpenAirAuthenticationFailure error when the response status not zero' do
-      stub_xml_request(
-        request: 'all_clients_single_request',
-        response: 'all_clients_auth_error'
-      )
-
-      expect {
-        subject.send_request(template: template, key: 'Client')
-      }.to raise_error(Sinclair::OpenAirAuthenticationFailure)
-    end
-
-    it 'raises a OpenAirResponseTimeout error when OpenAir times out' do
-      allow_any_instance_of(Faraday::Connection).to receive(:post).and_raise(Faraday::TimeoutError)
-
-      expect {
-        subject.send_request(template: template, key: 'Client')
-      }.to raise_error(Sinclair::OpenAirResponseTimeout)
-    end
-
-    it 'raises a OpenAirResponseError when the read status is not zero' do
-      stub_xml_request(
-        request: 'all_clients_single_request',
-        response: 'all_clients_read_error'
-      )
-
-      expect {
-        subject.send_request(template: template, key: 'Client')
-      }.to raise_error(Sinclair::OpenAirResponseError, 'Error making OpenAir request for Client. Got status 602.')
-    end
-
-    it 'does not raise an error when the read status is 601' do
-      stub_xml_request(
-        request: 'all_clients_single_request',
-        response: 'all_clients_read_601_error'
-      )
-
-      expect {
-        subject.send_request(template: template, key: 'Client')
-      }.not_to raise_error
+          expect {
+            subject.send_request(template: template, key: 'Client')
+          }.not_to raise_error
+        end
     end
   end
 end

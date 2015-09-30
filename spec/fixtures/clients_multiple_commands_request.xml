@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<request API_version='1.0' client='Client' client_ver='1.1' namespace='default' key='APIKEY'>
+  <Auth>
+    <Login>
+      <company>Company</company>
+      <user>Username</user>
+      <password>Password</password>
+    </Login>
+  </Auth>
+  <Read type='Customer' enable_custom='1' method='equal to' limit='1000'>
+    <Customer>
+      <id>1</id>
+    </Customer>
+  </Read>
+  <Read type='Customer' enable_custom='1' method='equal to' limit='1000'>
+    <Customer>
+      <id>2</id>
+    </Customer>
+  </Read>
+</request>

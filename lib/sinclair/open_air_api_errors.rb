@@ -12,13 +12,12 @@ module Sinclair
   end
 
   class OpenAirResponseError < StandardError
-    def initialize(key, status)
-      @key = key
+    def initialize(status)
       @status = status
     end
 
     def message
-      "Error making OpenAir request for #{@key}. Got status #{@status}."
+      "Error making OpenAir request. Got status #{@status}."
     end
   end
 end

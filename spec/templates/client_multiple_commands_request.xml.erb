@@ -1,0 +1,7 @@
+<% customer_ids.each do |customer_id| %>
+<Read type='Customer' enable_custom='1' method='equal to' limit='1000'>
+  <Customer>
+    <id><%= customer_id %></id>
+  </Customer>
+</Read>
+<% end %>
