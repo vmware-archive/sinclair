@@ -142,5 +142,21 @@ describe Sinclair::OpenAirApiClient do
           }.not_to raise_error
         end
     end
+
+    context 'when the request is an "add" request' do
+      let!(:template_name) { 'timesheet_add_request.xml.erb' }
+
+      before do
+        stub_xml_request(
+          request: 'timesheet_add_request',
+          response: 'timesheet_add_response'
+        )
+      end
+
+      it 'creates a timesheet' do
+        response = subject.send_request(template: template, key: 'Timesheet', method: 'Add', locals: { start_date: Date.new(2015, 9, 28), end_date: Date.new(2015, 10, 2), user_id: '1234' })
+        expect(response.map { |timesheet| timesheet['userid'] }).to eq(['1234'])
+      end
+    end
   end
 end

@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<request API_version='1.0' client='Client' client_ver='1.1' namespace='default' key='APIKEY'>
+  <Auth>
+    <Login>
+      <company>Company</company>
+      <user>Username</user>
+      <password>Password</password>
+    </Login>
+  </Auth>
+  <Add type="Timesheet">
+    <Timesheet>
+      <userid>1234</userid>
+      <starts>
+        <Date>
+          <hour/>
+          <minute/>
+          <second/>
+          <month>9</month>
+          <day>28</day>
+          <year>2015</year>
+        </Date>
+      </starts>
+      <ends>
+        <Date>
+          <hour/>
+          <minute/>
+          <second/>
+          <month>10</month>
+          <day>2</day>
+          <year>2015</year>
+        </Date>
+      </ends>
+    </Timesheet>
+  </Add>
+</request>

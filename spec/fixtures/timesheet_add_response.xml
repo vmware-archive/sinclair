@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<response>
+  <Auth status="0"/>
+  <Add status="0">
+    <Timesheet>
+      <status>O</status>
+      <userid>1234</userid>
+      <default_payrolltypeid/>
+      <id>6375</id>
+      <ends>
+        <Date>
+          <hour/>
+          <minute/>
+          <second/>
+          <month>12</month>
+          <day>01</day>
+          <year>2013</year>
+        </Date>
+      </ends>
+      <starts>
+        <Date>
+          <hour/>
+          <minute/>
+          <second/>
+          <month>11</month>
+          <day>25</day>
+          <year>2013</year>
+        </Date>
+      </starts>
+    </Timesheet>
+  </Add>
+</response>

@@ -17,10 +17,10 @@ module Sinclair
       @open_timeout = open_timeout
     end
 
-    def send_request(template: template, key: key, locals: {})
+    def send_request(template: template, key: key, method: 'Read', locals: {})
       response = []
       while true
-        page = process_page(template, key, {offset: response.length}.merge(locals))
+        page = process_page(template, key, method, {offset: response.length}.merge(locals))
         page.flatten!
         break unless page
         response += page
@@ -31,11 +31,11 @@ module Sinclair
 
     private
 
-    def process_page(template, key, locals = {})
+    def process_page(template, key, method, locals = {})
       response = make_request(locals, template)
       check_auth_status(response)
 
-      read = response['response']['Read']
+      read = response['response'][method]
       read = [read] unless read.is_a?(Array)
 
       check_read_status(read)
