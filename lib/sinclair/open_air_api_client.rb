@@ -40,7 +40,7 @@ module Sinclair
 
       check_read_status(read)
 
-      read.map { |r| r[key] }
+      read.map { |r| r[key] }.compact
     end
 
     def make_request(locals, template)
