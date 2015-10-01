@@ -12,6 +12,8 @@ module Sinclair
   end
 
   class OpenAirResponseError < StandardError
+    attr_reader :status
+
     def initialize(status)
       @status = status
     end

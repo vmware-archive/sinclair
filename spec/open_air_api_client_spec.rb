@@ -126,21 +126,24 @@ describe Sinclair::OpenAirApiClient do
           response: 'all_clients_read_error'
         )
 
-        expect {
+        begin
           subject.send_request(template: template, key: 'Client')
-        }.to raise_error(Sinclair::OpenAirResponseError, 'Error making OpenAir request. Got status 602.')
+        rescue Sinclair::OpenAirResponseError => e
+          expect(e.status).to eq(602)
+          expect(e.message).to eq('Error making OpenAir request. Got status 602.')
+        end
       end
 
       it 'does not raise an error when the read status is 601' do
-          stub_xml_request(
-            request: 'all_clients_single_request',
-            response: 'all_clients_read_601_error'
-          )
+        stub_xml_request(
+          request: 'all_clients_single_request',
+          response: 'all_clients_read_601_error'
+        )
 
-          expect {
-            subject.send_request(template: template, key: 'Client')
-          }.not_to raise_error
-        end
+        expect {
+          subject.send_request(template: template, key: 'Client')
+        }.not_to raise_error
+      end
     end
 
     context 'when the request is an "add" request' do
