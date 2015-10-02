@@ -4,7 +4,6 @@ require 'nokogiri'
 
 module Sinclair
   class OpenAirApiClient
-
     def initialize(username:, password:, company:, client:, key:, url: 'https://www.openair.com', limit: '1000', timeout: 180, open_timeout: 120)
       @username = username
       @password = password
@@ -53,7 +52,7 @@ module Sinclair
     end
 
     def check_auth_status(response)
-      raise Sinclair::OpenAirResponseUnrecognized if response['response']['Auth'].nil?
+      raise Sinclair::OpenAirResponseUnrecognized.new(response) if response['response']['Auth'].nil?
 
       auth_status = response['response']['Auth']['@status'].to_i
       raise Sinclair::OpenAirUserLocked if auth_status == 416

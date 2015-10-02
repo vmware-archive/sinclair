@@ -18,7 +18,7 @@ module Sinclair
     private
 
     def _render(temp, locals)
-      ERB.new(temp).result(OpenStruct.new(locals).instance_eval { binding }).chomp
+      ERB.new(temp).result(OpenStruct.new(locals).instance_eval { binding }).strip
     end
   end
 end
