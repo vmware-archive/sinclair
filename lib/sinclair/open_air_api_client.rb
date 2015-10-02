@@ -4,6 +4,8 @@ require 'nokogiri'
 
 module Sinclair
   class OpenAirApiClient
+    attr_accessor :logger, :last_request, :last_response
+
     def initialize(username:, password:, company:, client:, key:, url: 'https://www.openair.com', limit: '1000', timeout: 180, open_timeout: 120)
       @username = username
       @password = password
@@ -32,6 +34,9 @@ module Sinclair
 
     def process_page(template, key, method, locals = {})
       response = make_request(locals, template)
+
+      log_request unless logger.nil?
+
       check_auth_status(response)
 
       read = response['response'][method]
@@ -44,6 +49,7 @@ module Sinclair
 
     def make_request(locals, template)
       response = get_response(template, locals)
+      self.last_response = response.body
       Nori.new(advanced_typecasting: false).parse(response.body)
     end
 
@@ -73,10 +79,23 @@ module Sinclair
         Faraday.new(@url, options).post('/api.pl') do |request|
           request.body = Sinclair::Request.new(template).render(locals)
           request.headers.merge!({ 'Accept-Encoding' => 'identity' })
+          self.last_request = request.body
         end
       rescue Faraday::TimeoutError
         raise Sinclair::OpenAirResponseTimeout
       end
+    end
+
+    def log_request
+      logger.debug('#' * 80)
+      logger.debug('# REQUEST')
+      logger.debug('#' * 80)
+      logger.debug(last_request)
+
+      logger.debug('#' * 80)
+      logger.debug('# RESPONSE')
+      logger.debug('#' * 80)
+      logger.debug(last_response)
     end
 
     def wrap_response(response)

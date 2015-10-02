@@ -5,6 +5,19 @@ describe Sinclair::OpenAirApiClient do
   let(:template) { IO.read("#{ File.expand_path('../templates', __FILE__) }/#{ template_name }") }
 
   describe '#send_request' do
+    let!(:template_name) { 'client_request.xml.erb' }
+
+    it 'saves the last request and response' do
+      stub_xml_request(
+        request: 'clients_request',
+        response: 'clients_empty_response'
+      )
+
+      subject.send_request(template: template, key: 'Customer')
+      expect(subject.last_request).not_to be_nil
+      expect(subject.last_response).not_to be_nil
+    end
+
     context 'when the request is empty' do
       let!(:template_name) { 'client_request.xml.erb' }
 
