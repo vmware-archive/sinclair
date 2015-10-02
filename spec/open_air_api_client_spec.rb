@@ -5,12 +5,12 @@ describe Sinclair::OpenAirApiClient do
   let(:template) { IO.read("#{ File.expand_path('../templates', __FILE__) }/#{ template_name }") }
 
   describe '#send_request' do
-    let!(:template_name) { 'client_request.xml.erb' }
+    let!(:template_name) { 'single_command.xml.erb' }
 
     it 'saves the last request and response' do
       stub_xml_request(
-        request: 'clients_request',
-        response: 'clients_empty_response'
+        request: 'read_single_request',
+        response: 'read_single_response'
       )
 
       subject.send_request(template: template, model: 'Customer')
@@ -18,13 +18,13 @@ describe Sinclair::OpenAirApiClient do
       expect(subject.last_response).not_to be_nil
     end
 
-    context 'when the request is empty' do
-      let!(:template_name) { 'client_request.xml.erb' }
+    context 'when the response is empty' do
+      let!(:template_name) { 'single_command.xml.erb' }
 
       before do
         stub_xml_request(
-          request: 'clients_request',
-          response: 'clients_empty_response'
+          request: 'read_single_request',
+          response: 'error_601'
         )
       end
 
@@ -35,13 +35,13 @@ describe Sinclair::OpenAirApiClient do
     end
 
     context 'when the request contains one command' do
-      let!(:template_name) { 'client_request.xml.erb' }
+      let!(:template_name) { 'single_command.xml.erb' }
 
       context 'when the response contains one item' do
         before do
           stub_xml_request(
-            request: 'clients_request',
-            response: 'clients_response'
+            request: 'read_single_request',
+            response: 'read_single_response'
           )
         end
 
@@ -54,13 +54,13 @@ describe Sinclair::OpenAirApiClient do
       context 'when the response contains multiple items' do
         before do
           stub_xml_request(
-            request: 'all_clients_multiple_request_1',
-            response: 'all_clients_multiple_response_1'
+            request: 'read_multiple_request_1',
+            response: 'read_multiple_response_1'
           )
 
           stub_xml_request(
-            request: 'all_clients_multiple_request_2',
-            response: 'all_clients_multiple_response_2'
+            request: 'read_multiple_request_2',
+            response: 'read_multiple_response_2'
           )
         end
 
@@ -74,12 +74,12 @@ describe Sinclair::OpenAirApiClient do
     end
 
     context 'when the request contains multiple commands' do
-      let!(:template_name) { 'client_multiple_commands_request.xml.erb' }
+      let!(:template_name) { 'multiple_commands.xml.erb' }
 
       before do
         stub_xml_request(
-          request: 'clients_multiple_commands_request',
-          response: 'clients_multiple_commands_response'
+          request: 'multiple_commands_request',
+          response: 'multiple_commands_response'
         )
       end
 
@@ -90,12 +90,12 @@ describe Sinclair::OpenAirApiClient do
     end
 
     context 'when an error occurs' do
-      let!(:template_name) { 'client_request.xml.erb' }
+      let!(:template_name) { 'single_command.xml.erb' }
 
       it 'raises a OpenAirResponseUnrecognized error when the response is malformed' do
         stub_xml_request(
-          request: 'all_clients_single_request',
-          response: 'all_clients_single_error'
+          request: 'read_single_request',
+          response: 'error_no_auth_status'
         )
 
         expect {
@@ -105,8 +105,8 @@ describe Sinclair::OpenAirApiClient do
 
       it 'raises a OpenAirUserLocked error when the response status is 416' do
         stub_xml_request(
-          request: 'all_clients_single_request',
-          response: 'all_clients_locked_error'
+          request: 'read_single_request',
+          response: 'error_416'
         )
 
         expect {
@@ -116,8 +116,8 @@ describe Sinclair::OpenAirApiClient do
 
       it 'raises a OpenAirAuthenticationFailure error when the response status not zero' do
         stub_xml_request(
-          request: 'all_clients_single_request',
-          response: 'all_clients_auth_error'
+          request: 'read_single_request',
+          response: 'error_123'
         )
 
         expect {
@@ -135,8 +135,8 @@ describe Sinclair::OpenAirApiClient do
 
       it 'raises a OpenAirResponseError when the read status is not zero' do
         stub_xml_request(
-          request: 'all_clients_single_request',
-          response: 'all_clients_read_error'
+          request: 'read_single_request',
+          response: 'error_602'
         )
 
         begin
@@ -149,8 +149,8 @@ describe Sinclair::OpenAirApiClient do
 
       it 'does not raise an error when the read status is 601' do
         stub_xml_request(
-          request: 'all_clients_single_request',
-          response: 'all_clients_read_601_error'
+          request: 'read_single_request',
+          response: 'error_601'
         )
 
         expect {
@@ -160,12 +160,12 @@ describe Sinclair::OpenAirApiClient do
     end
 
     context 'when the request is an "add" request' do
-      let!(:template_name) { 'timesheet_add_request.xml.erb' }
+      let!(:template_name) { 'add_command.xml.erb' }
 
       before do
         stub_xml_request(
-          request: 'timesheet_add_request',
-          response: 'timesheet_add_response'
+          request: 'add_request',
+          response: 'add_response'
         )
       end
 

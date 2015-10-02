@@ -1,7 +1,7 @@
 <?xml version="1.0" standalone="yes"?>
 <response>
-  <Auth status = "0"></Auth>
-  <Read status = "0">
+  <Auth status="0"></Auth>
+  <Read status="0">
     <Customer>
       <id>1</id>
       <name>Client 1</name>

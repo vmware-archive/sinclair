@@ -1,13 +1,13 @@
 <?xml version="1.0" standalone="yes"?>
 <response>
-  <Auth status = "0"></Auth>
-  <Read status = "0">
+  <Auth status="0"></Auth>
+  <Read status="0">
     <Customer>
       <id>1</id>
       <name>Customer 1</name>
     </Customer>
   </Read>
-  <Read status = "0">
+  <Read status="0">
     <Customer>
       <id>2</id>
       <name>Customer 2</name>
