@@ -18,10 +18,10 @@ module Sinclair
       @open_timeout = open_timeout
     end
 
-    def send_request(template: template, key: key, method: 'Read', locals: {})
+    def send_request(template: template, model: model, method: 'Read', locals: {})
       response = []
       while true
-        page = process_page(template, key, method, {offset: response.length}.merge(locals))
+        page = process_page(template, model, method, {offset: response.length}.merge(locals))
         page.flatten!
         break unless page
         response += page
@@ -32,7 +32,7 @@ module Sinclair
 
     private
 
-    def process_page(template, key, method, locals = {})
+    def process_page(template, model, method, locals = {})
       response = make_request(locals, template)
 
       log_request unless logger.nil?
@@ -44,7 +44,7 @@ module Sinclair
 
       check_read_status(read)
 
-      read.map { |r| r[key] }.compact
+      read.map { |r| r[model] }.compact
     end
 
     def make_request(locals, template)

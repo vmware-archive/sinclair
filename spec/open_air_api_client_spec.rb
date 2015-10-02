@@ -13,7 +13,7 @@ describe Sinclair::OpenAirApiClient do
         response: 'clients_empty_response'
       )
 
-      subject.send_request(template: template, key: 'Customer')
+      subject.send_request(template: template, model: 'Customer')
       expect(subject.last_request).not_to be_nil
       expect(subject.last_response).not_to be_nil
     end
@@ -29,7 +29,7 @@ describe Sinclair::OpenAirApiClient do
       end
 
       it 'returns an empty array' do
-        response = subject.send_request(template: template, key: 'Customer')
+        response = subject.send_request(template: template, model: 'Customer')
         expect(response).to be_empty
       end
     end
@@ -46,7 +46,7 @@ describe Sinclair::OpenAirApiClient do
         end
 
         it 'returns an array of one item' do
-          response = subject.send_request(template: template, key: 'Customer')
+          response = subject.send_request(template: template, model: 'Customer')
           expect(response.map { |client| client['name'] }).to match_array(['Client 1'])
         end
       end
@@ -65,7 +65,7 @@ describe Sinclair::OpenAirApiClient do
         end
 
         it 'makes multiple requests when the number of responses is greater than the limit' do
-          response = subject.send_request(template: template, key: 'Customer')
+          response = subject.send_request(template: template, model: 'Customer')
           names = response.map { |client| client['name'] }
 
           expect(names).to match_array(['Blah Client', 'Client 1', 'Client 2', 'Client 3', 'Client 4', 'Client 5', 'Fancy Client'])
@@ -84,7 +84,7 @@ describe Sinclair::OpenAirApiClient do
       end
 
       it 'returns an array of all items' do
-        response = subject.send_request(template: template, key: 'Customer', locals: { customer_ids: [1, 2] })
+        response = subject.send_request(template: template, model: 'Customer', locals: { customer_ids: [1, 2] })
         expect(response.map { |client| client['name'] }).to match_array(['Customer 1', 'Customer 2'])
       end
     end
@@ -99,7 +99,7 @@ describe Sinclair::OpenAirApiClient do
         )
 
         expect {
-          subject.send_request(template: template, key: 'Client')
+          subject.send_request(template: template, model: 'Client')
         }.to raise_error(Sinclair::OpenAirResponseUnrecognized)
       end
 
@@ -110,7 +110,7 @@ describe Sinclair::OpenAirApiClient do
         )
 
         expect {
-          subject.send_request(template: template, key: 'Client')
+          subject.send_request(template: template, model: 'Client')
         }.to raise_error(Sinclair::OpenAirUserLocked)
       end
 
@@ -121,7 +121,7 @@ describe Sinclair::OpenAirApiClient do
         )
 
         expect {
-          subject.send_request(template: template, key: 'Client')
+          subject.send_request(template: template, model: 'Client')
         }.to raise_error(Sinclair::OpenAirAuthenticationFailure)
       end
 
@@ -129,7 +129,7 @@ describe Sinclair::OpenAirApiClient do
         allow_any_instance_of(Faraday::Connection).to receive(:post).and_raise(Faraday::TimeoutError)
 
         expect {
-          subject.send_request(template: template, key: 'Client')
+          subject.send_request(template: template, model: 'Client')
         }.to raise_error(Sinclair::OpenAirResponseTimeout)
       end
 
@@ -140,7 +140,7 @@ describe Sinclair::OpenAirApiClient do
         )
 
         begin
-          subject.send_request(template: template, key: 'Client')
+          subject.send_request(template: template, model: 'Client')
         rescue Sinclair::OpenAirResponseError => e
           expect(e.status).to eq(602)
           expect(e.message).to eq('Error making OpenAir request. Got status 602.')
@@ -154,7 +154,7 @@ describe Sinclair::OpenAirApiClient do
         )
 
         expect {
-          subject.send_request(template: template, key: 'Client')
+          subject.send_request(template: template, model: 'Client')
         }.not_to raise_error
       end
     end
@@ -170,7 +170,7 @@ describe Sinclair::OpenAirApiClient do
       end
 
       it 'creates a timesheet' do
-        response = subject.send_request(template: template, key: 'Timesheet', method: 'Add', locals: { start_date: Date.new(2015, 9, 28), end_date: Date.new(2015, 10, 2), user_id: '1234' })
+        response = subject.send_request(template: template, model: 'Timesheet', method: 'Add', locals: { start_date: Date.new(2015, 9, 28), end_date: Date.new(2015, 10, 2), user_id: '1234' })
         expect(response.map { |timesheet| timesheet['userid'] }).to eq(['1234'])
       end
     end
