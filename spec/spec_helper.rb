@@ -7,6 +7,7 @@ require 'sinclair'
 require 'webmock'
 
 WebMock.disable_net_connect!(allow_localhost: true, allow: 'codeclimate.com')
+WebMock.enable!
 
 def ignore_whitespace(str)
   str.gsub(/\s/, '')
