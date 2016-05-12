@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Sinclair::OpenAirApiClient do
-  subject  { Sinclair::OpenAirApiClient.new(username: 'Username', password: 'Password', company: 'Company', client: 'Client', key: 'APIKEY', limit: '5') }
+  subject { Sinclair::OpenAirApiClient.new(username: 'Username', password: 'Password', company: 'Company', client: 'Client', key: 'APIKEY', limit: '5') }
   let(:template) { IO.read("#{ File.expand_path('../templates', __FILE__) }/#{ template_name }") }
 
   describe '#send_request' do
@@ -18,6 +18,23 @@ describe Sinclair::OpenAirApiClient do
       expect(subject.last_response).not_to be_nil
     end
 
+    context 'when reading multiple models in a single response' do
+      let!(:template_name) { 'single_command.xml.erb' }
+
+      before do
+        stub_xml_request(
+          request: 'read_single_request',
+          response: 'read_multiple_model_response'
+        )
+      end
+
+      it 'returns a hash with a key for each model type' do
+        response = subject.send_request(template: template, model: 'Thing1')
+        expect(response.keys).to match_array(['Thing1', 'Thing2'])
+      end
+
+    end
+
     context 'when the response is empty' do
       let!(:template_name) { 'single_command.xml.erb' }
 
@@ -30,7 +47,7 @@ describe Sinclair::OpenAirApiClient do
 
       it 'returns an empty array' do
         response = subject.send_request(template: template, model: 'Customer')
-        expect(response).to be_empty
+        expect(response['Customer']).to be_empty
       end
     end
 
@@ -47,7 +64,7 @@ describe Sinclair::OpenAirApiClient do
 
         it 'returns an array of one item' do
           response = subject.send_request(template: template, model: 'Customer')
-          expect(response.map { |client| client['name'] }).to match_array(['Client 1'])
+          expect(response['Customer'].map { |client| client['name'] }).to match_array(['Client 1'])
         end
       end
 
@@ -66,7 +83,7 @@ describe Sinclair::OpenAirApiClient do
 
         it 'makes multiple requests when the number of responses is greater than the limit' do
           response = subject.send_request(template: template, model: 'Customer')
-          names = response.map { |client| client['name'] }
+          names = response['Customer'].map { |client| client['name'] }
 
           expect(names).to match_array(['Blah Client', 'Client 1', 'Client 2', 'Client 3', 'Client 4', 'Client 5', 'Fancy Client'])
         end
@@ -84,8 +101,8 @@ describe Sinclair::OpenAirApiClient do
       end
 
       it 'returns an array of all items' do
-        response = subject.send_request(template: template, model: 'Customer', locals: { customer_ids: [1, 2] })
-        expect(response.map { |client| client['name'] }).to match_array(['Customer 1', 'Customer 2'])
+        response = subject.send_request(template: template, model: 'Customer', locals: {customer_ids: [1, 2]})
+        expect(response['Customer'].map { |client| client['name'] }).to match_array(['Customer 1', 'Customer 2'])
       end
     end
 
@@ -170,8 +187,8 @@ describe Sinclair::OpenAirApiClient do
       end
 
       it 'creates a timesheet' do
-        response = subject.send_request(template: template, model: 'Timesheet', method: 'Add', locals: { start_date: Date.new(2015, 9, 28), end_date: Date.new(2015, 10, 2), user_id: '1234' })
-        expect(response.map { |timesheet| timesheet['userid'] }).to eq(['1234'])
+        response = subject.send_request(template: template, model: 'Timesheet', method: 'Add', locals: {start_date: Date.new(2015, 9, 28), end_date: Date.new(2015, 10, 2), user_id: '1234'})
+        expect(response['Timesheet'].map { |timesheet| timesheet['userid'] }).to eq(['1234'])
       end
     end
   end

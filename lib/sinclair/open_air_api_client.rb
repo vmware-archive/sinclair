@@ -19,20 +19,24 @@ module Sinclair
     end
 
     def send_request(template: template, model: model, method: 'Read', locals: {})
-      response = []
+      response = {}
+      response[model] = []
+
       while true
-        page = process_page(template, model, method, {offset: response.length}.merge(locals))
-        page.flatten!
-        break unless page
-        response += page
-        break if page.length < @limit.to_i
+        page = process_page(template, method, {offset: response[model].length}.merge(locals))
+        break unless page[model]
+        returned_models = page.keys
+        returned_models.each do |m|
+          response[m] ? response[m] += page[m] : response[m] = page[m]
+        end
+        break if page[model].length < @limit.to_i
       end
       response
     end
 
     private
 
-    def process_page(template, model, method, locals = {})
+    def process_page(template, method, locals = {})
       response = make_request(locals, template)
 
       log_request unless logger.nil?
@@ -43,8 +47,7 @@ module Sinclair
       read = [read] unless read.is_a?(Array)
 
       check_read_status(read)
-
-      read.map { |r| r[model] }.compact
+      map_response_by_model(read)
     end
 
     def make_request(locals, template)
@@ -55,6 +58,29 @@ module Sinclair
 
     def invalid_read_status(status)
       status != 0 && status != 601
+    end
+
+    def map_response_by_model(response)
+      result = {}
+      returned_models = find_returned_models(response)
+      returned_models.each { |m| result[m] = [] }
+
+      response.each do |r|
+        model = returned_models.find{|m| r.keys.include?(m)}
+        result[model] << r[model]
+      end
+
+      result.map do |model, items|
+        result[model] = items.flatten.compact
+      end
+
+      result
+    end
+
+    def find_returned_models(response)
+      response.map do |r|
+        r.keys[0]
+      end.compact.uniq
     end
 
     def check_auth_status(response)
@@ -78,7 +104,7 @@ module Sinclair
         locals = locals.merge(username: @username, password: @password, company: @company, client: @client, key: @key, limit: @limit)
         Faraday.new(@url, options).post('/api.pl') do |request|
           request.body = Sinclair::Request.new(template).render(locals)
-          request.headers.merge!({ 'Accept-Encoding' => 'identity' })
+          request.headers.merge!({'Accept-Encoding' => 'identity'})
           self.last_request = request.body
         end
       rescue Faraday::TimeoutError
