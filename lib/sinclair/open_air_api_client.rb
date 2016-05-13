@@ -18,12 +18,12 @@ module Sinclair
       @open_timeout = open_timeout
     end
 
-    def send_request(template: template, model: model, method: 'Read', locals: {})
+    def send_request(template: , model: , method: 'Read', locals: {})
       response = {}
       response[model] = []
 
       while true
-        page = process_page(template, method, model, {offset: response[model].length}.merge(locals))
+        page = process_page(template: template, method: method, model: model, locals: {offset: response[model].length}.merge(locals))
         break unless page[model]
         returned_models = page.keys
         returned_models.each do |m|
@@ -36,7 +36,7 @@ module Sinclair
 
     private
 
-    def process_page(template, method, model, locals = {})
+    def process_page(template:, method:, model:, locals:  {})
       response = make_request(locals, template)
 
       log_request unless logger.nil?
