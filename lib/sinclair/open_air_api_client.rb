@@ -23,7 +23,7 @@ module Sinclair
       response[model] = []
 
       while true
-        page = process_page(template, method, {offset: response[model].length}.merge(locals))
+        page = process_page(template, method, model, {offset: response[model].length}.merge(locals))
         break unless page[model]
         returned_models = page.keys
         returned_models.each do |m|
@@ -36,7 +36,7 @@ module Sinclair
 
     private
 
-    def process_page(template, method, locals = {})
+    def process_page(template, method, model, locals = {})
       response = make_request(locals, template)
 
       log_request unless logger.nil?
@@ -46,7 +46,7 @@ module Sinclair
       read = response['response'][method]
       read = [read] unless read.is_a?(Array)
 
-      check_read_status(read)
+      check_response_status(read, model)
       map_response_by_model(read)
     end
 
@@ -91,9 +91,12 @@ module Sinclair
       raise Sinclair::OpenAirAuthenticationFailure if auth_status != 0
     end
 
-    def check_read_status(read)
+    def check_response_status(read, model)
       statuses = read.map { |r| r['@status'].to_i }
-      if statuses.any? { |s| invalid_read_status(s) }
+      if statuses.any? { |s| s == 1002 }
+        errors = read.select{|r| r['@status'].to_i == 1002}.map{|r| r[model]['errors']}
+        raise Sinclair::OpenAirInvalidData.new(errors)
+      elsif statuses.any? { |s| invalid_read_status(s) }
         raise Sinclair::OpenAirResponseError.new(statuses.find { |s| invalid_read_status(s) })
       end
     end

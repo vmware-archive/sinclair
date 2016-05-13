@@ -174,6 +174,17 @@ describe Sinclair::OpenAirApiClient do
           subject.send_request(template: template, model: 'Client')
         }.not_to raise_error
       end
+
+      it 'raises an OpenAirInvalidData error when the response status is 1002' do
+        stub_xml_request(
+          request: 'read_single_request',
+          response: 'error_1002'
+        )
+
+        expect {
+          subject.send_request(template: template, model: 'Timesheet', method: 'Submit')
+        }.to raise_error(Sinclair::OpenAirInvalidData, 'The timesheet is terrible, The timesheet is really bad')
+      end
     end
 
     context 'when the request is an "add" request' do
